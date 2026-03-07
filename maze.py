@@ -4,24 +4,26 @@ import math
 import random
 import sys
 
-# ============================================================
-# 設定
-# ============================================================
+
+
+
+
+
 SCREEN_W = 960
 SCREEN_H = 540
 FPS = 60
 
-# マップサイズ（奇数にすること）
+
 MAP_W = 21
 MAP_H = 21
-CELL = 40          # 1セルのピクセルサイズ（内部ワールド座標）
+CELL = 40          
 
-# レイキャスティング設定
-FOV = math.radians(60)   # 視野角 (Scratch の fov=48 相当)
-NUM_RAYS = SCREEN_W // 2  # レイ本数（半分解像度で高速化）
+
+FOV = math.radians(60)   
+NUM_RAYS = SCREEN_W // 2  
 MAX_DEPTH = MAP_W * CELL
 
-# 色
+
 COLOR_SKY    = (30,  30,  80)
 COLOR_FLOOR  = (50,  50,  50)
 COLOR_WALL_N = (180, 180, 180)
@@ -31,19 +33,19 @@ COLOR_GOAL   = (0,   255, 100)
 COLOR_MAP_BG = (20,  20,  20)
 COLOR_MAP_WL = (200, 200, 200)
 
-MINIMAP_SCALE = 6   # ミニマップ 1セル = 6px
+MINIMAP_SCALE = 6   
 MINIMAP_X = 10
 MINIMAP_Y = 10
 
 PLAYER_SPEED = 3.0
-PLAYER_ROT_SPEED = 0.04   # キーボード回転速度（rad/frame）
-MOUSE_SENS = 0.003         # マウス感度
+PLAYER_ROT_SPEED = 0.04   
+MOUSE_SENS = 0.002         
 
-# ============================================================
-# 迷路生成（再帰バックトラッカー）
-# ============================================================
+
+
+
 def generate_maze(w, h):
-    """w x h (奇数) の迷路を生成。1=壁, 0=通路"""
+    
     maze = [[1] * w for _ in range(h)]
 
     def in_bounds(cx, cy):
@@ -61,7 +63,7 @@ def generate_maze(w, h):
 
     start_x, start_y = 1, 1
     carve(start_x, start_y)
-    # 外枠は必ず壁
+   
     for x in range(w):
         maze[0][x] = maze[h - 1][x] = 1
     for y in range(h):
@@ -70,7 +72,7 @@ def generate_maze(w, h):
 
 
 def find_floor_cells(maze):
-    """通路セルのリストを返す"""
+    
     cells = []
     for y, row in enumerate(maze):
         for x, v in enumerate(row):
@@ -79,23 +81,17 @@ def find_floor_cells(maze):
     return cells
 
 
-# ============================================================
-# レイキャスティング
-# ============================================================
+
 def cast_ray(maze, px, py, angle):
-    """
-    DDA法でレイを飛ばし、壁までの距離と向き(水平/垂直)を返す。
-    px, py: プレイヤー座標（ピクセル）
-    angle:  レイの角度（ラジアン）
-    """
+    
     ray_cos = math.cos(angle)
     ray_sin = math.sin(angle)
 
-    # DDA セットアップ
+    
     map_x = int(px / CELL)
     map_y = int(py / CELL)
 
-    # 方向ごとのステップ幅
+    
     if ray_cos == 0:
         delta_x = 1e30
     else:
@@ -106,7 +102,7 @@ def cast_ray(maze, px, py, angle):
     else:
         delta_y = abs(1 / ray_sin) * CELL
 
-    # 最初のステップ
+
     if ray_cos < 0:
         step_x = -1
         side_dist_x = (px - map_x * CELL) / abs(ray_cos)
@@ -121,9 +117,9 @@ def cast_ray(maze, px, py, angle):
         step_y = 1
         side_dist_y = ((map_y + 1) * CELL - py) / abs(ray_sin)
 
-    # DDA ループ
+ 
     hit = False
-    side = 0  # 0=垂直壁(NS方向), 1=水平壁(EW方向)
+    side = 0  
     for _ in range(MAX_DEPTH):
         if side_dist_x < side_dist_y:
             side_dist_x += delta_x
@@ -151,14 +147,12 @@ def cast_ray(maze, px, py, angle):
     return abs(dist), side
 
 
-# ============================================================
-# 描画
-# ============================================================
+
 def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
-    """3Dレイキャスティングビューを描画"""
+    
     w, h = surface.get_size()
 
-    # 空と床
+   
     surface.fill(COLOR_SKY, (0, 0, w, h // 2))
     surface.fill(COLOR_FLOOR, (0, h // 2, w, h // 2))
 
@@ -169,7 +163,7 @@ def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
     for i in range(NUM_RAYS):
         dist, side = cast_ray(maze, px, py, ray_angle)
 
-        # 魚眼補正
+        
         corrected = dist * math.cos(ray_angle - angle)
         if corrected <= 0:
             corrected = 0.001
@@ -177,7 +171,7 @@ def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
         wall_h = min(int(CELL * h / corrected), h)
         wall_top = h // 2 - wall_h // 2
 
-        # 距離で明暗
+        
         brightness = max(0, min(255, int(255 - corrected * 0.8)))
         if side == 1:
             brightness = int(brightness * 0.7)
@@ -187,7 +181,7 @@ def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
 
         ray_angle += d_angle
 
-    # ゴール方向にアイコン（簡易）
+   
     gx_world = goal_x * CELL + CELL // 2
     gy_world = goal_y * CELL + CELL // 2
     dx = gx_world - px
@@ -196,7 +190,7 @@ def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
     if goal_dist > 0:
         goal_angle = math.atan2(dy, dx)
         rel_angle = goal_angle - angle
-        # 角度を -π〜π に正規化
+        
         while rel_angle > math.pi:
             rel_angle -= 2 * math.pi
         while rel_angle < -math.pi:
@@ -211,12 +205,12 @@ def draw_3d(surface, maze, px, py, angle, goal_x, goal_y):
 
 
 def draw_minimap(surface, maze, px, py, angle, goal_x, goal_y):
-    """左上にミニマップを描画"""
+    
     s = MINIMAP_SCALE
     mw = len(maze[0]) * s
     mh = len(maze) * s
 
-    # 背景
+    
     pygame.draw.rect(surface, COLOR_MAP_BG, (MINIMAP_X - 1, MINIMAP_Y - 1, mw + 2, mh + 2))
 
     for y, row in enumerate(maze):
@@ -225,26 +219,25 @@ def draw_minimap(surface, maze, px, py, angle, goal_x, goal_y):
                 pygame.draw.rect(surface, COLOR_MAP_WL,
                                  (MINIMAP_X + x * s, MINIMAP_Y + y * s, s, s))
 
-    # ゴール
+    
     pygame.draw.rect(surface, COLOR_GOAL,
                      (MINIMAP_X + goal_x * s + 1, MINIMAP_Y + goal_y * s + 1, s - 2, s - 2))
 
-    # プレイヤー
     ppx = MINIMAP_X + int(px / CELL * s)
     ppy = MINIMAP_Y + int(py / CELL * s)
     pygame.draw.circle(surface, COLOR_PLAYER, (ppx, ppy), s // 2)
 
-    # 視線
+    
     ex = ppx + int(math.cos(angle) * s * 2)
     ey = ppy + int(math.sin(angle) * s * 2)
     pygame.draw.line(surface, COLOR_PLAYER, (ppx, ppy), (ex, ey), 2)
 
 
 def draw_compass(surface, angle, font):
-    """右下にコンパス（方位）を表示"""
+    
     cx, cy = SCREEN_W - 50, SCREEN_H - 50
     pygame.draw.circle(surface, (60, 60, 60), (cx, cy), 30)
-    # N方向
+ 
     nx = cx + int(math.cos(-math.pi / 2 - angle) * 22)
     ny = cy + int(math.sin(-math.pi / 2 - angle) * 22)
     pygame.draw.line(surface, (255, 80, 80), (cx, cy), (nx, ny), 3)
@@ -252,14 +245,12 @@ def draw_compass(surface, angle, font):
     surface.blit(label, (nx - 5, ny - 8))
 
 
-# ============================================================
-# ゲームクラス
-# ============================================================
+
 class MazeGame:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-        pygame.display.set_caption("迷路ゲーム（レイキャスティング）")
+        pygame.display.set_caption('3D maze')
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 28)
         self.big_font = pygame.font.SysFont(None, 72)
@@ -272,13 +263,14 @@ class MazeGame:
         self.maze = generate_maze(MAP_W, MAP_H)
         floors = find_floor_cells(self.maze)
 
-        # プレイヤー開始位置
+     
         start = floors[0]
         self.px = start[0] * CELL + CELL // 2
         self.py = start[1] * CELL + CELL // 2
-        self.angle = 0.0  # 右向き（東）
+        self.angle = 0.0  
 
-        # ゴール位置（スタートから遠い通路）
+
+
         goal = max(floors,
                    key=lambda c: abs(c[0] - start[0]) + abs(c[1] - start[1]))
         self.goal_x, self.goal_y = goal
@@ -321,7 +313,7 @@ class MazeGame:
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.angle -= PLAYER_ROT_SPEED
 
-        # 衝突判定（壁スライディング）
+       
         margin = 8
         new_px = self.px + move_x
         new_py = self.py + move_y
@@ -352,23 +344,23 @@ class MazeGame:
             self.won = True
 
     def draw(self):
-        # 3Dビュー
+        
         draw_3d(self.screen, self.maze, self.px, self.py, self.angle,
                 self.goal_x, self.goal_y)
-        # ミニマップ
+      
         draw_minimap(self.screen, self.maze, self.px, self.py, self.angle,
                      self.goal_x, self.goal_y)
-        # コンパス
+       
         draw_compass(self.screen, self.angle, self.font)
 
-        # HUD
+        
         hint = self.font.render("WASD / 矢印: 移動  マウス: 回転  R: リセット  ESC: 終了", True, (200, 200, 200))
         self.screen.blit(hint, (10, SCREEN_H - 30))
 
         goal_hint = self.font.render("緑がゴール（ミニマップ参照）", True, COLOR_GOAL)
         self.screen.blit(goal_hint, (10, SCREEN_H - 55))
 
-        # クリア画面
+      
         if self.won:
             overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 160))
@@ -397,9 +389,7 @@ class MazeGame:
         sys.exit()
 
 
-# ============================================================
-# エントリーポイント
-# ============================================================
+
 if __name__ == "__main__":
     game = MazeGame()
     game.run()
