@@ -1,0 +1,148 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --green: #00ff88;
+    --dim-green: #00aa55;
+    --bg: #050a06;
+    --panel: rgba(0,255,136,0.06);
+    --border: rgba(0,255,136,0.2);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  h1 {
+    font-family: 'Zen Dots', sans-serif;
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    letter-spacing: 0.3em;
+    color: var(--green);
+    text-shadow: 0 0 20px var(--green), 0 0 60px rgba(0,255,136,0.3);
+    margin-bottom: 10px;
+  }
+
+  #wrapper {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  #gameCanvas {
+    display: block;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 30px rgba(0,255,136,0.15), inset 0 0 60px rgba(0,0,0,0.8);
+    image-rendering: pixelated;
+    cursor: crosshair;
+  }
+
+  #panel {
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .panel-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px;
+  }
+
+  .panel-box h2 {
+    font-family: 'Zen Dots', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--dim-green);
+    margin-bottom: 8px;
+  }
+  #minimapCanvas {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+    border: 1px solid var(--border);
+  }
+
+  #compassCanvas { display: block; margin: 0 auto; }
+
+  .controls { font-size: 0.62rem; line-height: 2; color: var(--dim-green); }
+  .controls span { color: var(--green); }
+
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 6px;
+    padding: 0 2px;
+    font-size: 0.65rem;
+    color: var(--dim-green);
+  }
+  #hud .stat { display: flex; gap: 6px; align-items: center; }
+  #hud .val  { color: var(--green); }
+
+  #distBar {
+    width: 120px; height: 6px;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  #distFill { height: 100%; background: var(--green); transition: width 0.1s; box-shadow: 0 0 8px var(--green); }
+
+  #overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(5,10,6,0.92);
+    z-index: 100; gap: 18px;
+    transition: opacity 0.4s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+
+  #overlay h2 {
+    font-family: 'Zen Dots', sans-serif;
+    font-size: clamp(1.4rem, 4vw, 2.8rem);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 30px var(--green), 0 0 80px rgba(0,255,136,0.4);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+
+  #overlay p { font-size: 0.8rem; color: var(--dim-green); letter-spacing: 0.15em; }
+
+  button {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    color: var(--bg);
+    background: var(--green);
+    border: none; padding: 10px 28px; cursor: pointer;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    transition: box-shadow 0.2s, transform 0.1s;
+  }
+  button:hover  { box-shadow: 0 0 20px var(--green); transform: scale(1.04); }
+  button:active { transform: scale(0.97); }
