@@ -1,3 +1,6 @@
+#This cannot work on github hell no;;;;
+#I leave this as an origin-version
+
 
 import pygame
 import math
@@ -392,4 +395,5 @@ class MazeGame:
 
 if __name__ == "__main__":
     game = MazeGame()
+
     game.run()
